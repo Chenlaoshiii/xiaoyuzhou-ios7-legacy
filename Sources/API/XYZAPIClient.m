@@ -25,22 +25,8 @@ static NSString * const kXYZBundleID = @"app.podcast.cosmos";
 - (instancetype)init {
     self = [super init];
     if (self) {
-        @try {
-            NSURLSessionConfiguration *cfg = nil;
-            if ([NSURLSessionConfiguration respondsToSelector:@selector(defaultSessionConfiguration)]) {
-                cfg = [NSURLSessionConfiguration defaultSessionConfiguration];
-            }
-            if (cfg) {
-                cfg.timeoutIntervalForRequest = 30.0;
-                cfg.HTTPMaximumConnectionsPerHost = 4;
-                _session = [NSURLSession sessionWithConfiguration:cfg];
-            } else {
-                _session = [NSURLSession sharedSession];
-            }
-        } @catch (__unused NSException *ex) {
-            _session = [NSURLSession sharedSession];
-        }
-        // Prefer CFUUID only (available well before iOS 7); avoid NSUUID dependency at +load/init.
+        // Prefer CFUUID only; do NOT create NSURLSession here — defer until first request
+        // so splash / first frame never touches CFNetwork.
         CFUUIDRef uuid = CFUUIDCreate(NULL);
         NSString *uuidStr = nil;
         if (uuid) {
@@ -53,6 +39,26 @@ static NSString * const kXYZBundleID = @"app.podcast.cosmos";
         _deviceId = uuidStr;
     }
     return self;
+}
+
+- (NSURLSession *)session {
+    if (_session) return _session;
+    @try {
+        NSURLSessionConfiguration *cfg = nil;
+        if ([NSURLSessionConfiguration respondsToSelector:@selector(defaultSessionConfiguration)]) {
+            cfg = [NSURLSessionConfiguration defaultSessionConfiguration];
+        }
+        if (cfg) {
+            cfg.timeoutIntervalForRequest = 30.0;
+            cfg.HTTPMaximumConnectionsPerHost = 4;
+            _session = [NSURLSession sessionWithConfiguration:cfg];
+        } else {
+            _session = [NSURLSession sharedSession];
+        }
+    } @catch (__unused NSException *ex) {
+        _session = [NSURLSession sharedSession];
+    }
+    return _session;
 }
 
 #pragma mark - Headers

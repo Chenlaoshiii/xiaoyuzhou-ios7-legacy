@@ -1,23 +1,34 @@
-# BUILD_STATUS — 2026-09-07
+# BUILD_STATUS — 2026-09-08 (UTC+8)
 
-## Crash cause (conclusion)
-Prior flash-crash on iPhone 5c iOS7 most likely from combo of:
-1) Heavy native launch (Auth/API/NSURLSession/AV) before first frame
-2) Code signature using SHA256 as primary hash (iOS7 prefers SHA1)
-3) Info.plist noise (NSAppTransportSecurity, UIBackgroundModes)
-4) Linux Theos + iPhoneOS9.3.sdk only (no cleaner 7.1/8.4 SDK available from theos/sdks)
+## This build: FULL NATIVE (no UIWebView)
 
-## Fix shipped
-- Full app = UIWebView shell only (UIKit/Foundation/CoreGraphics), defer load to next runloop
-- ldid fake-sign SHA1-only + get-task-allow
-- Info.plist: MinimumOSVersion 7.0, CFBundleSupportedPlatforms=iPhoneOS, no ATS/background
-- Official icons kept
+Binary-search on iPhone 5c iOS 7 showed:
+- XYZSmoke OK
+- Xiaoyuzhou-nweb (icons, no UIWebView) OK
+- Xiaoyuzhou with UIWebView+HTTPS CRASHES
 
-## Artifacts
-- Smoke: `/workspace/XYZSmoke-i4tools.ipa`
-- Full (identical bytes): `/workspace/Xiaoyuzhou-爱思助手.ipa` = `/workspace/Xiaoyuzhou-i4tools.ipa` = `/workspace/xiaoyuzhou-ios7/dist/XiaoyuzhouLegacy-unsigned.ipa`
+**Conclusion:** UIWebView/network-at-launch path is toxic. This IPA restores the native podcast client **without UIWebView**.
 
-## Install (爱思助手)
-1. Device jailbroken iOS7 + AppSync Unified
-2. Import IPA in 爱思助手 → install
-3. Test smoke first if full still dies: XYZSmoke should show white screen + "OK"
+### Launch path (matches nweb for first frame)
+1. White window +「小宇宙」label + `makeKeyAndVisible`
+2. Next main-queue turn: Login or TabBar from credentials
+3. Token refresh / NSURLSession deferred further (lazy session in API + ImageCache)
+
+### Player
+AVFoundation/MediaPlayer **not linked**. `XYZPlayerManager` stubs play with alert「播放稍后」until CFNetwork/list UI is confirmed stable.
+
+### Frameworks linked
+UIKit, Foundation, CoreGraphics, QuartzCore, CFNetwork, Security, SystemConfiguration  
+(+ libobjc, CoreFoundation, libSystem)
+
+### Artifacts
+| IPA | Role |
+|-----|------|
+| `/workspace/Xiaoyuzhou-i4tools.ipa` | native full client |
+| `/workspace/Xiaoyuzhou-爱思助手.ipa` | identical |
+| `/workspace/Xiaoyuzhou-native-i4tools.ipa` | identical |
+| `/workspace/Xiaoyuzhou-nweb-i4tools.ipa` | prior no-web splash (kept) |
+| `/workspace/Xiaoyuzhou-localhtml-i4tools.ipa` | prior localhtml UIWebView test (kept) |
+
+### Build flags
+`THEOS=/home/box/theos` · `TARGET=iphone:clang:9.3:7.0` · `ARCHS=armv7` · `FINALPACKAGE=1` · `ldid -Sent.plist -Hsha1` · entitlements: `get-task-allow` only · no iTunesArtwork

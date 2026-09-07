@@ -19,9 +19,14 @@
         _cache = [[NSCache alloc] init];
         _cache.countLimit = 100;
         _tasks = [NSMutableDictionary dictionary];
-        _session = [NSURLSession sharedSession];
+        // defer NSURLSession until first image fetch
     }
     return self;
+}
+- (NSURLSession *)session {
+    if (_session) return _session;
+    _session = [NSURLSession sharedSession];
+    return _session;
 }
 - (void)loadImageURL:(NSString *)urlString intoImageView:(UIImageView *)imageView placeholder:(UIImage *)placeholder {
     imageView.image = placeholder;
