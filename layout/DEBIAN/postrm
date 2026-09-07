@@ -1,0 +1,5 @@
+#!/bin/bash
+if command -v uicache >/dev/null 2>&1; then
+  uicache || true
+fi
+exit 0

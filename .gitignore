@@ -1,0 +1,10 @@
+.theos/
+packages/*.deb
+dist/stage/
+dist/ipa-stage/
+dist/*.deb
+*.dSYM/
+.DS_Store
+*.o
+*.swiftmodule
+build/

@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+APP="/Applications/XiaoyuzhouLegacy.app"
+if command -v ldid >/dev/null 2>&1; then
+  if [ -f "$APP/XiaoyuzhouLegacy" ]; then
+    # Minimal fake-sign; avoid platform-application for compatibility
+    ldid -S "$APP/XiaoyuzhouLegacy" 2>/dev/null || true
+  fi
+fi
+if command -v uicache >/dev/null 2>&1; then
+  uicache || true
+fi
+echo "小宇宙 Legacy 已安装到 /Applications"
+exit 0
