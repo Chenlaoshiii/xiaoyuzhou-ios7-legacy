@@ -16,6 +16,15 @@
 | 部署目标 | **iOS 7.0** |
 | 构建 | Theos application → `/Applications` 的 `.deb`，或未签名 IPA（AppSync / 爱思助手） |
 
+## 当前真机策略（闪退对策）
+
+点开秒退时，优先怀疑 **SHA256 签名 / 新 SDK 工具链**，而不是业务代码。本仓库现在默认打成：
+
+1. **smoke/** — 白屏 + 文字 `OK`，只验证进程能起来  
+2. **主 App** — 笨办法：`UIWebView` 加载 `https://www.xiaoyuzhoufm.com/`（失败则 http / 本地 HTML 兜底），先保证能看见界面
+
+请先装 `XYZSmoke-i4tools.ipa`：能看到 OK 再装正式 IPA。
+
 ## 功能（目标）
 
 - 短信验证码登录 + Token 刷新

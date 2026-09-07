@@ -1,0 +1,9 @@
+Package: com.lars.xyzsmoke
+Name: XYZ Smoke
+Depends: firmware (>= 7.0)
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Minimal launch smoke test for iOS 7 armv7
+Maintainer: Lars
+Author: Lars
+Section: Utilities
